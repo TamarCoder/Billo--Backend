@@ -1,8 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
+import { Public } from '../auth/public.decorator.js';
 
 // Used by Docker HEALTHCHECK and Kubernetes probes.
-// Public on purpose: it returns no data. When a global auth guard is added,
-// mark this controller as public.
+// Public on purpose (no API key): it returns no data and is pinged by the
+// keep-alive cron job.
+@Public()
 @Controller('health')
 export class HealthController {
   @Get()

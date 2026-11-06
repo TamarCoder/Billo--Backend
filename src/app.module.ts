@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AppController } from './app.controller.js';
@@ -11,6 +12,7 @@ import { InvoicesModule } from './invoices/invoices.module.js';
 import { SettingsModule } from './settings/settings.module.js';
 import { CreateInvoicesAndSettings1710000000001 } from './database/migrations/1710000000001-create-invoices-and-settings.js';
 import { LegacyImportModule } from './legacy-import/legacy-import.module.js';
+import { ApiKeyGuard } from './auth/api-key.guard.js';
 
 @Module({
   imports: [
@@ -41,6 +43,6 @@ import { LegacyImportModule } from './legacy-import/legacy-import.module.js';
     LegacyImportModule,
   ],
   controllers: [AppController, HealthController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: ApiKeyGuard }],
 })
 export class AppModule {}
