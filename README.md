@@ -31,6 +31,45 @@
 $ npm install
 ```
 
+## Billo API (local development)
+
+The local PostgreSQL database and API run with Docker Compose. Copy `.env.example`
+to `.env`, set a local database password, then start the services:
+
+```bash
+docker compose up --build -d
+```
+
+The API applies pending TypeORM migrations before starting. The PostgreSQL
+container is available on `127.0.0.1:5433`; the API is available on
+`http://127.0.0.1:4000`.
+
+The app's data is stored in PostgreSQL. The API endpoints are:
+
+| Method   | Path                       | Purpose                                                         |
+| -------- | -------------------------- | --------------------------------------------------------------- |
+| `GET`    | `/api/companies`           | List companies                                                  |
+| `POST`   | `/api/companies`           | Create a company with `{ "name": "..." }`                       |
+| `PUT`    | `/api/companies/:id`       | Update a company name                                           |
+| `DELETE` | `/api/companies/:id`       | Delete a company                                                |
+| `GET`    | `/api/invoices`            | List invoice history                                            |
+| `POST`   | `/api/invoices`            | Create or replace the invoice for a company and reporting month |
+| `PUT`    | `/api/invoices/:id`        | Update an invoice                                               |
+| `PATCH`  | `/api/invoices/:id/status` | Update an invoice status                                        |
+| `DELETE` | `/api/invoices/:id`        | Delete an invoice                                               |
+| `GET`    | `/api/settings`            | Read organization settings                                      |
+| `PUT`    | `/api/settings`            | Save organization settings                                      |
+
+When the frontend first connects from a browser or the desktop app, it imports
+existing local companies, invoices, and settings once per app origin. Local
+storage is kept intact; after a successful import, the PostgreSQL data is the
+source of truth. The import is transactional and can be safely retried if the
+request fails.
+
+This development API does not yet authenticate users. Do not expose it to the
+public internet or use it with production data until authentication and
+authorization are implemented.
+
 ## Compile and run the project
 
 ```bash
