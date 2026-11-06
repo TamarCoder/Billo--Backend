@@ -1,0 +1,22 @@
+# dependencies
+/node_modules
+
+# build
+/dist
+
+# tests
+/coverage
+
+# env files
+.env*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json

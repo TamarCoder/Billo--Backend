@@ -1,0 +1,11 @@
+# Local development: docker compose up --build
+services:
+  api:
+    build: .
+    image: billo-backend:local
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      CORS_ORIGINS: http://localhost:3000,app://-
+    restart: unless-stopped

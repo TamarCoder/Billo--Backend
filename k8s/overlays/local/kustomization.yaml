@@ -1,0 +1,37 @@
+# kubectl apply -k k8s/overlays/local
+# Build the image first: docker build -t billo-backend:local .
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+images:
+  - name: billo-backend
+    newName: billo-backend
+    newTag: local
+patches:
+  - target: { kind: Deployment, name: billo-backend }
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: add
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+  - target: { kind: HorizontalPodAutoscaler, name: billo-backend }
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+  - target: { kind: PodDisruptionBudget, name: billo-backend }
+    patch: |-
+      - op: replace
+        path: /spec/minAvailable
+        value: 0
+  - target: { kind: Service, name: billo-backend }
+    patch: |-
+      - op: replace
+        path: /spec/type
+        value: NodePort
+      - op: add
+        path: /spec/ports/0/nodePort
+        value: 30400

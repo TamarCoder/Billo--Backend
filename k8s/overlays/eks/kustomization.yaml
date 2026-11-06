@@ -1,0 +1,11 @@
+# kubectl apply -k k8s/overlays/eks
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+  - ingress.yaml
+images:
+  - name: billo-backend
+    # TODO: your ECR repository. CI should set newTag to the git commit SHA.
+    newName: REPLACE_ACCOUNT_ID.dkr.ecr.REPLACE_REGION.amazonaws.com/billo-backend
+    newTag: latest
