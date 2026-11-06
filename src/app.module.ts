@@ -25,6 +25,8 @@ import { LegacyImportModule } from './legacy-import/legacy-import.module.js';
         username: config.getOrThrow<string>('DB_USERNAME'),
         password: config.getOrThrow<string>('DB_PASSWORD'),
         database: config.getOrThrow<string>('DB_DATABASE'),
+        // Neon (production) requires SSL; local Docker Postgres does not.
+        ssl: config.get<string>('DB_SSL') === 'true',
         autoLoadEntities: true,
         migrations: [
           CreateInsuranceCompanies1710000000000,
