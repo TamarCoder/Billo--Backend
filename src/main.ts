@@ -22,10 +22,15 @@ async function bootstrap() {
     }),
   );
 
-  const origins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
-    : DEFAULT_ORIGINS;
-  app.enableCors({ origin: origins, credentials: true });
+  const origins = new Set(
+    process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(',')
+          .map((origin) => origin.trim())
+          .filter(Boolean)
+      : DEFAULT_ORIGINS,
+  );
+  origins.add('app://-');
+  app.enableCors({ origin: [...origins], credentials: true });
 
   app.enableShutdownHooks();
   
