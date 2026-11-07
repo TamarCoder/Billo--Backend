@@ -7,6 +7,14 @@ export class CreateCompanyDto {
   )
   @IsString()
   @IsNotEmpty()
+  @MaxLength(50)
+  number!: string;
+
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
+  @IsString()
+  @IsNotEmpty()
   @MaxLength(200)
   name!: string;
 }

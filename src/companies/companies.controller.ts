@@ -25,7 +25,10 @@ export class CompaniesController {
 
   @Post()
   create(@Body() dto: CreateCompanyDto) {
-    return this.companiesService.create(dto.name);
+    return this.companiesService.create({
+      number: dto.number,
+      name: dto.name,
+    });
   }
 
   @Put(':id')
@@ -33,7 +36,10 @@ export class CompaniesController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCompanyDto,
   ) {
-    return this.companiesService.update(id, dto.name);
+    return this.companiesService.update(id, {
+      number: dto.number,
+      name: dto.name,
+    });
   }
 
   @Delete(':id')

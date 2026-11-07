@@ -4,6 +4,7 @@ import { InsuranceCompany } from '../companies/entities/insurance-company.entity
 import { InvoiceRecord } from '../invoices/entities/invoice-record.entity.js';
 import { OrganizationSettings } from '../settings/entities/organization-settings.entity.js';
 import { CreateInvoicesAndSettings1710000000001 } from './migrations/1710000000001-create-invoices-and-settings.js';
+import { AddNumberToInsuranceCompanies1730990000000 } from './migrations/1730990000000-add-number-to-insurance-companies.js';
 
 export const databaseDataSource = new DataSource({
   type: 'postgres',
@@ -17,6 +18,7 @@ export const databaseDataSource = new DataSource({
   migrations: [
     CreateInsuranceCompanies1710000000000,
     CreateInvoicesAndSettings1710000000001,
+    AddNumberToInsuranceCompanies1730990000000,
   ],
   migrationsTableName: 'typeorm_migrations',
   synchronize: false,
