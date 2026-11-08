@@ -14,14 +14,18 @@ export class InvoicesService {
     private readonly invoicesRepository: Repository<InvoiceRecord>,
   ) {}
 
-  findAll(): Promise<InvoiceRecord[]> {
-    return this.invoicesRepository.find({ order: { createdAt: 'DESC' } });
+  findAll(organizationId: string): Promise<InvoiceRecord[]> {
+    return this.invoicesRepository.find({
+      where: { organizationId },
+      order: { createdAt: 'DESC' },
+    });
   }
 
-  async create(invoice: InvoiceDraft): Promise<InvoiceRecord> {
+  async create(organizationId: string, invoice: InvoiceDraft): Promise<InvoiceRecord> {
     const existing = await this.invoicesRepository
       .createQueryBuilder('record')
-      .where(`record.invoice ->> 'issuerName' = :issuerName`, {
+      .where('record.organization_id = :organizationId', { organizationId })
+      .andWhere(`record.invoice ->> 'issuerName' = :issuerName`, {
         issuerName: invoice.issuerName,
       })
       .andWhere(`record.invoice ->> 'reportingMonth' = :reportingMonth`, {
@@ -34,32 +38,37 @@ export class InvoicesService {
     }
 
     return this.invoicesRepository.save(
-      this.invoicesRepository.create({ invoice, status: 'draft' }),
+      this.invoicesRepository.create({ organizationId, invoice, status: 'draft' }),
     );
   }
 
-  async update(id: string, invoice: InvoiceDraft): Promise<InvoiceRecord> {
-    const record = await this.findById(id);
+  async update(
+    organizationId: string,
+    id: string,
+    invoice: InvoiceDraft,
+  ): Promise<InvoiceRecord> {
+    const record = await this.findById(organizationId, id);
     record.invoice = invoice;
     return this.invoicesRepository.save(record);
   }
 
   async updateStatus(
+    organizationId: string,
     id: string,
     status: InvoiceStatus,
   ): Promise<InvoiceRecord> {
-    const record = await this.findById(id);
+    const record = await this.findById(organizationId, id);
     record.status = status;
     return this.invoicesRepository.save(record);
   }
 
-  async remove(id: string): Promise<void> {
-    const record = await this.findById(id);
+  async remove(organizationId: string, id: string): Promise<void> {
+    const record = await this.findById(organizationId, id);
     await this.invoicesRepository.remove(record);
   }
 
-  private async findById(id: string): Promise<InvoiceRecord> {
-    const record = await this.invoicesRepository.findOneBy({ id });
+  private async findById(organizationId: string, id: string): Promise<InvoiceRecord> {
+    const record = await this.invoicesRepository.findOneBy({ id, organizationId });
     if (!record) {
       throw new NotFoundException('ინვოისი ვერ მოიძებნა.');
     }

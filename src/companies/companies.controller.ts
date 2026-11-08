@@ -10,6 +10,8 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
+import { CurrentOrganization } from '../auth/current-organization.decorator.js';
+import type { OrganizationView } from '../auth/auth.service.js';
 import { CompaniesService } from './companies.service.js';
 import { CreateCompanyDto } from './dto/create-company.dto.js';
 import { UpdateCompanyDto } from './dto/update-company.dto.js';
@@ -19,13 +21,13 @@ export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
 
   @Get()
-  findAll() {
-    return this.companiesService.findAll();
+  findAll(@CurrentOrganization() org: OrganizationView) {
+    return this.companiesService.findAll(org.id);
   }
 
   @Post()
-  create(@Body() dto: CreateCompanyDto) {
-    return this.companiesService.create({
+  create(@CurrentOrganization() org: OrganizationView, @Body() dto: CreateCompanyDto) {
+    return this.companiesService.create(org.id, {
       number: dto.number,
       name: dto.name,
     });
@@ -33,10 +35,11 @@ export class CompaniesController {
 
   @Put(':id')
   update(
+    @CurrentOrganization() org: OrganizationView,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCompanyDto,
   ) {
-    return this.companiesService.update(id, {
+    return this.companiesService.update(org.id, id, {
       number: dto.number,
       name: dto.name,
     });
@@ -44,7 +47,10 @@ export class CompaniesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.companiesService.remove(id);
+  remove(
+    @CurrentOrganization() org: OrganizationView,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.companiesService.remove(org.id, id);
   }
 }

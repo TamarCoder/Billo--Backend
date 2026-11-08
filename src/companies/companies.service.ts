@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { InsuranceCompany } from './entities/insurance-company.entity.js';
+import { Company } from './entities/company.entity.js';
 
 type CompanyInput = {
   number: string;
@@ -15,34 +15,40 @@ type CompanyInput = {
 @Injectable()
 export class CompaniesService {
   constructor(
-    @InjectRepository(InsuranceCompany)
-    private readonly companiesRepository: Repository<InsuranceCompany>,
+    @InjectRepository(Company)
+    private readonly companiesRepository: Repository<Company>,
   ) {}
 
-  findAll(): Promise<InsuranceCompany[]> {
+  findAll(organizationId: string): Promise<Company[]> {
     return this.companiesRepository.find({
+      where: { organizationId },
       order: { number: 'ASC' },
     });
   }
 
-  async create(input: CompanyInput): Promise<InsuranceCompany> {
-    await this.ensureNumberIsFree(input.number);
+  async create(organizationId: string, input: CompanyInput): Promise<Company> {
+    await this.ensureNumberIsFree(organizationId, input.number);
 
     const company = this.companiesRepository.create({
+      organizationId,
       number: input.number,
       name: input.name,
     });
     return this.companiesRepository.save(company);
   }
 
-  async update(id: string, input: CompanyInput): Promise<InsuranceCompany> {
-    const company = await this.companiesRepository.findOneBy({ id });
+  async update(
+    organizationId: string,
+    id: string,
+    input: CompanyInput,
+  ): Promise<Company> {
+    const company = await this.companiesRepository.findOneBy({ id, organizationId });
     if (!company) {
       throw new NotFoundException('კომპანია ვერ მოიძებნა.');
     }
 
     if (company.number !== input.number) {
-      await this.ensureNumberIsFree(input.number);
+      await this.ensureNumberIsFree(organizationId, input.number);
     }
 
     company.number = input.number;
@@ -50,8 +56,8 @@ export class CompaniesService {
     return this.companiesRepository.save(company);
   }
 
-  async remove(id: string): Promise<void> {
-    const company = await this.companiesRepository.findOneBy({ id });
+  async remove(organizationId: string, id: string): Promise<void> {
+    const company = await this.companiesRepository.findOneBy({ id, organizationId });
     if (!company) {
       throw new NotFoundException('კომპანია ვერ მოიძებნა.');
     }
@@ -59,8 +65,8 @@ export class CompaniesService {
     await this.companiesRepository.remove(company);
   }
 
-  private async ensureNumberIsFree(number: string): Promise<void> {
-    const existing = await this.companiesRepository.findOneBy({ number });
+  private async ensureNumberIsFree(organizationId: string, number: string): Promise<void> {
+    const existing = await this.companiesRepository.findOneBy({ organizationId, number });
     if (existing) {
       throw new ConflictException('ამ ნომრით კომპანია უკვე არსებობს.');
     }

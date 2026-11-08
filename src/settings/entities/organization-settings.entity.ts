@@ -1,9 +1,16 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('organization_settings')
 export class OrganizationSettings {
-  @PrimaryColumn({ type: 'smallint' })
-  id = 1;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column({ name: 'organization_id', type: 'uuid' })
+  organizationId!: string;
+
+  // The account's own organization; /api/settings reads and writes this row.
+  @Column({ name: 'is_primary', type: 'boolean', default: false })
+  isPrimary!: boolean;
 
   @Column({ type: 'varchar', length: 300 })
   title!: string;

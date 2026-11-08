@@ -29,6 +29,9 @@ export class InvoiceRecord {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  @Column({ name: 'organization_id', type: 'uuid' })
+  organizationId!: string;
+
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt!: Date;
 
