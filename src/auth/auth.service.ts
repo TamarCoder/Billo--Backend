@@ -53,10 +53,11 @@ export class AuthService {
       where: { identificationCode: dto.identificationCode },
       select: { id: true, identificationCode: true, email: true, passwordHash: true },
     });
-    const valid = org ? await verifyPassword(dto.password, org.passwordHash) : false;
+    const valid = await verifyPassword(dto.password, org?.passwordHash ?? '');
     if (!org || !valid) throw new UnauthorizedException('Invalid credentials');
 
-    await this.sessions.delete({ organizationId: org.id, expiresAt: LessThan(new Date()) });
+    // Clears every expired session, not only this organization's.
+    await this.sessions.delete({ expiresAt: LessThan(new Date()) });
     const token = randomBytes(32).toString('base64url');
     const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
     await this.sessions.save(

@@ -35,6 +35,8 @@ export class InvoiceDraftDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
+  // Same format the form accepts: lari (spaces allowed) with up to 2 tetri digits, "." or ",".
+  @Matches(/^(?:\d[\d\s  ]*(?:[.,]\d{0,2})?|[.,]\d{1,2})$/u, { message: 'თანხა შეიყვანეთ სწორად, მაქსიმუმ 2 ათწილადი ნიშნით.' })
   amount!: string;
 
   @IsString()

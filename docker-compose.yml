@@ -7,7 +7,7 @@ services:
       - "127.0.0.1:4000:4000"
     environment:
       PORT: 4000
-      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173,app://-
+      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000,app://-
       DB_HOST: db
       DB_PORT: 5432
       DB_USERNAME: ${POSTGRES_USER}

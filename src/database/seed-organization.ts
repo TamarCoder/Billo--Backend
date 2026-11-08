@@ -20,7 +20,11 @@ try {
     where: { identificationCode: code },
     select: { id: true, passwordHash: true },
   });
-  if (existing?.passwordHash === LOCKED_PASSWORD) {
+  const emailOwner = await repo.findOne({ where: { email }, select: { id: true } });
+  if (emailOwner && emailOwner.id !== existing?.id) {
+    console.error(`Email ${email} already belongs to another organization; nothing changed.`);
+    process.exitCode = 1;
+  } else if (existing?.passwordHash === LOCKED_PASSWORD) {
     // Created by the data migration without a password: set the real one now.
     await repo.update(existing.id, { email, passwordHash: await hashPassword(password) });
     console.log(`Organization ${code} password set.`);

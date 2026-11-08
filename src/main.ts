@@ -1,18 +1,26 @@
 import { ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module.js';
+import { UniqueViolationFilter } from './database/unique-violation.filter.js';
 
 // Origins allowed to call this API.
 // Billo frontend: Vite dev server and the Electron app (app://-).
 const DEFAULT_ORIGINS = [
   'http://localhost:3000',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
   'app://-',
 ];
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Behind a proxy (Render), the real client IP is needed for the login limit.
+  const rawTrustProxy = process.env.TRUST_PROXY?.trim().toLowerCase() ?? '';
+  const trustProxy = rawTrustProxy === 'true' ? 1 : Number(rawTrustProxy || 0);
+  if (trustProxy > 0) app.set('trust proxy', trustProxy);
+
+  app.useGlobalFilters(new UniqueViolationFilter(app.get(HttpAdapterHost).httpAdapter));
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -33,7 +41,6 @@ async function bootstrap() {
   app.enableCors({ origin: [...origins], credentials: true });
 
   app.enableShutdownHooks();
-  
 
   // Port 3000 is used by the Next.js frontend, so the API uses 4000.
   await app.listen(process.env.PORT ?? 4000);

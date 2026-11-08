@@ -28,6 +28,7 @@ export class IssuersService {
   }
 
   async create(organizationId: string, values: UpdateOrganizationSettingsDto): Promise<IssuerView> {
+    // The account's first organization is the account itself (primary).
     const hasPrimary = await this.issuers.exists({ where: { organizationId, isPrimary: true } });
     const saved = await this.issuers.save(
       this.issuers.create({

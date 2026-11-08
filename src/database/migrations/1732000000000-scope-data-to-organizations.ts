@@ -24,8 +24,15 @@ export class ScopeDataToOrganizations1732000000000 implements MigrationInterface
     `);
     if (Number(counts[0]?.total ?? 0) > 0) {
       await queryRunner.query(
+        // If the email already belongs to another code, use a placeholder instead of failing.
         `INSERT INTO "organizations" ("identification_code", "email", "password_hash")
-         VALUES ($1, $2, $3) ON CONFLICT ("identification_code") DO NOTHING`,
+         VALUES (
+           $1,
+           CASE WHEN EXISTS (SELECT 1 FROM "organizations" WHERE "email" = $2)
+                THEN $1 || '@billo.invalid' ELSE $2 END,
+           $3
+         )
+         ON CONFLICT DO NOTHING`,
         [OWNER_CODE, OWNER_EMAIL, LOCKED_PASSWORD],
       );
       for (const table of DATA_TABLES) {

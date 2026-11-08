@@ -14,7 +14,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "migration:run": "npm run build && node --env-file=.env dist/database/run-migrations.js",
+    "migration:run": "npm run build && node --env-file-if-exists=.env dist/database/run-migrations.js",
     "seed:organization": "npm run build && node --env-file=.env dist/database/seed-organization.js",
     "lint": "oxlint --type-aware src/ test/",
     "test": "vitest run",
