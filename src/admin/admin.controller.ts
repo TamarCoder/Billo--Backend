@@ -33,6 +33,16 @@ export class AdminController {
     private readonly formsService: InvoiceFormsService,
   ) {}
 
+  @Get('stats')
+  getStats() {
+    return this.adminService.getStats();
+  }
+
+  @Get('system')
+  getSystemStatus() {
+    return this.adminService.getSystemStatus();
+  }
+
   @Get('organizations')
   listOrganizations() {
     return this.adminService.listOrganizations();

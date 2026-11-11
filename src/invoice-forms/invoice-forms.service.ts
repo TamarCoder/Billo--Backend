@@ -85,6 +85,10 @@ export class InvoiceFormsService {
     if (!result.affected) throw new NotFoundException('ფორმა ვერ მოიძებნა.');
   }
 
+  countAll(): Promise<number> {
+    return this.forms.count();
+  }
+
   countByOrganization(): Promise<{ organizationId: string; count: string }[]> {
     return this.forms
       .createQueryBuilder('form')
