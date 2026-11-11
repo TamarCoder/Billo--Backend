@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Organization } from '../organizations/entities/organization.entity.js';
+import { AdminAuthController } from './admin-auth.controller.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { Session } from './entities/session.entity.js';
@@ -22,7 +23,7 @@ import { Session } from './entities/session.entity.js';
       },
     ]),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, AdminAuthController],
   providers: [AuthService],
   exports: [AuthService],
 })

@@ -5,6 +5,7 @@ import { LessThan, Repository } from 'typeorm';
 import { Organization, type OrganizationRole } from '../organizations/entities/organization.entity.js';
 import { Session } from './entities/session.entity.js';
 import { hashPassword, verifyPassword } from './password.js';
+import type { AdminLoginDto } from './dto/admin-login.dto.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
 
@@ -56,7 +57,21 @@ export class AuthService {
     });
     const valid = await verifyPassword(dto.password, org?.passwordHash ?? '');
     if (!org || !valid) throw new UnauthorizedException('Invalid credentials');
+    return this.startSession(org);
+  }
 
+  // Same answer for a wrong password and a non-admin account, so admins cannot be discovered.
+  async adminLogin(dto: AdminLoginDto) {
+    const org = await this.organizations.findOne({
+      where: { email: dto.email },
+      select: { id: true, identificationCode: true, email: true, role: true, passwordHash: true },
+    });
+    const valid = await verifyPassword(dto.password, org?.passwordHash ?? '');
+    if (!org || !valid || org.role !== 'admin') throw new UnauthorizedException('Invalid credentials');
+    return this.startSession(org);
+  }
+
+  private async startSession(org: Organization) {
     // Clears every expired session, not only this organization's.
     await this.sessions.delete({ expiresAt: LessThan(new Date()) });
     const token = randomBytes(32).toString('base64url');
