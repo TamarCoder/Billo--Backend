@@ -41,6 +41,7 @@ async function bootstrap() {
       : DEFAULT_ORIGINS,
   );
   origins.add('app://-');
+  origins.add('https://billo-admin.vercel.app');
   app.enableCors({ origin: [...origins], credentials: true });
 
   app.enableShutdownHooks();
