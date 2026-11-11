@@ -1,7 +1,11 @@
 import { ValidationPipe } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import type { Repository } from 'typeorm';
 import { AppModule } from './app.module.js';
+import { ensureAdmin } from './auth/ensure-admin.js';
+import { Organization } from './organizations/entities/organization.entity.js';
 import { UniqueViolationFilter } from './database/unique-violation.filter.js';
 
 // Origins allowed to call this API.
@@ -45,6 +49,16 @@ async function bootstrap() {
   app.enableCors({ origin: [...origins], credentials: true });
 
   app.enableShutdownHooks();
+
+  // Hosts without a shell (Render free plan): set ADMIN_EMAIL + ADMIN_PASSWORD, deploy, then remove them.
+  const adminEmail = process.env.ADMIN_EMAIL?.trim();
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (adminEmail && adminPassword) {
+    const repo = app.get<Repository<Organization>>(getRepositoryToken(Organization));
+    const code = process.env.ADMIN_IDENTIFICATION_CODE?.trim() || 'admin';
+    const result = await ensureAdmin(repo, adminEmail, adminPassword, code);
+    console.log(`Admin account ${result}.`);
+  }
 
   // Port 3000 is used by the Next.js frontend, so the API uses 4000.
   await app.listen(process.env.PORT ?? 4000);
