@@ -11,6 +11,8 @@ import { InvoicesModule } from './invoices/invoices.module.js';
 import { SettingsModule } from './settings/settings.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { IssuersModule } from './issuers/issuers.module.js';
+import { InvoiceFormsModule } from './invoice-forms/invoice-forms.module.js';
+import { AdminModule } from './admin/admin.module.js';
 import { SessionGuard } from './auth/session.guard.js';
 
 @Module({
@@ -37,6 +39,8 @@ import { SessionGuard } from './auth/session.guard.js';
     SettingsModule,
     AuthModule,
     IssuersModule,
+    InvoiceFormsModule,
+    AdminModule,
   ],
   controllers: [AppController, HealthController],
   // Every route needs a login session unless marked @Public().

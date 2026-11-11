@@ -1,5 +1,7 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+export type OrganizationRole = 'organization' | 'admin';
+
 @Entity('organizations')
 export class Organization {
   @PrimaryGeneratedColumn('uuid')
@@ -13,6 +15,9 @@ export class Organization {
 
   @Column({ name: 'password_hash', type: 'varchar', length: 255, select: false })
   passwordHash!: string;
+
+  @Column({ type: 'varchar', length: 16, default: 'organization' })
+  role!: OrganizationRole;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

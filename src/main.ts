@@ -9,6 +9,9 @@ import { UniqueViolationFilter } from './database/unique-violation.filter.js';
 const DEFAULT_ORIGINS = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
+  // Billo admin panel (Vite dev server).
+  'http://localhost:3001',
+  'http://127.0.0.1:3001',
   'app://-',
 ];
 

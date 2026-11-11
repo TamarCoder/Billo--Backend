@@ -2,7 +2,7 @@ import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/co
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash, randomBytes } from 'node:crypto';
 import { LessThan, Repository } from 'typeorm';
-import { Organization } from '../organizations/entities/organization.entity.js';
+import { Organization, type OrganizationRole } from '../organizations/entities/organization.entity.js';
 import { Session } from './entities/session.entity.js';
 import { hashPassword, verifyPassword } from './password.js';
 import type { LoginDto } from './dto/login.dto.js';
@@ -15,6 +15,7 @@ export interface OrganizationView {
   id: string;
   identificationCode: string;
   email: string;
+  role: OrganizationRole;
 }
 
 export function hashToken(token: string): string {
@@ -22,7 +23,7 @@ export function hashToken(token: string): string {
 }
 
 function toView(org: Organization): OrganizationView {
-  return { id: org.id, identificationCode: org.identificationCode, email: org.email };
+  return { id: org.id, identificationCode: org.identificationCode, email: org.email, role: org.role };
 }
 
 @Injectable()
@@ -51,7 +52,7 @@ export class AuthService {
   async login(dto: LoginDto) {
     const org = await this.organizations.findOne({
       where: { identificationCode: dto.identificationCode },
-      select: { id: true, identificationCode: true, email: true, passwordHash: true },
+      select: { id: true, identificationCode: true, email: true, role: true, passwordHash: true },
     });
     const valid = await verifyPassword(dto.password, org?.passwordHash ?? '');
     if (!org || !valid) throw new UnauthorizedException('Invalid credentials');

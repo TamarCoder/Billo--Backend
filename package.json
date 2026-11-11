@@ -16,6 +16,7 @@
     "start:prod": "node dist/main",
     "migration:run": "npm run build && node --env-file-if-exists=.env dist/database/run-migrations.js",
     "seed:organization": "npm run build && node --env-file=.env dist/database/seed-organization.js",
+    "admin:promote": "npm run build && node --env-file=.env dist/database/promote-admin.js",
     "lint": "oxlint --type-aware src/ test/",
     "test": "vitest run",
     "test:watch": "vitest",
