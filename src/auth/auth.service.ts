@@ -17,6 +17,7 @@ export interface OrganizationView {
   identificationCode: string;
   email: string;
   role: OrganizationRole;
+  invoiceTemplates: string[];
 }
 
 export function hashToken(token: string): string {
@@ -24,7 +25,13 @@ export function hashToken(token: string): string {
 }
 
 function toView(org: Organization): OrganizationView {
-  return { id: org.id, identificationCode: org.identificationCode, email: org.email, role: org.role };
+  return {
+    id: org.id,
+    identificationCode: org.identificationCode,
+    email: org.email,
+    role: org.role,
+    invoiceTemplates: org.invoiceTemplates ?? [],
+  };
 }
 
 @Injectable()

@@ -10,12 +10,14 @@ import {
   ParseUUIDPipe,
   MaxFileSizeValidator,
   Post,
+  Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RegisterDto } from '../auth/dto/register.dto.js';
+import { InvoiceTemplatesDto } from './dto/invoice-templates.dto.js';
 import { toFile } from '../invoice-forms/invoice-forms.controller.js';
 import {
   InvoiceFormsService,
@@ -61,6 +63,15 @@ export class AdminController {
   @Get('organizations/:id/companies')
   listCompanies(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.listCompanies(id);
+  }
+
+  // Which coded invoice templates this organization sees on its Forms page.
+  @Put('organizations/:id/invoice-templates')
+  setInvoiceTemplates(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: InvoiceTemplatesDto,
+  ) {
+    return this.adminService.setInvoiceTemplates(id, dto.templates);
   }
 
   @Get('organizations/:id/forms')

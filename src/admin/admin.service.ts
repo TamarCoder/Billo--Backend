@@ -157,6 +157,13 @@ export class AdminService {
     return this.getOrganization(org.id);
   }
 
+  async setInvoiceTemplates(id: string, templates: string[]): Promise<Organization> {
+    const org = await this.getOrganization(id);
+    org.invoiceTemplates = [...new Set(templates)];
+    await this.organizations.save(org);
+    return org;
+  }
+
   async listCompanies(organizationId: string): Promise<Company[]> {
     await this.getOrganization(organizationId);
     return this.companies.find({
