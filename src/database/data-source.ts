@@ -4,6 +4,7 @@ import { AllowMultipleIssuers1733000000000 } from './migrations/1733000000000-al
 import { DataSource } from 'typeorm';
 import { AddOrganizationRole1736000000000 } from './migrations/1736000000000-add-organization-role.js';
 import { AddInvoiceTemplates1738000000000 } from './migrations/1738000000000-add-invoice-templates.js';
+import { AssignTatishviliTemplate1738000000001 } from './migrations/1738000000001-assign-tatishvili-template.js';
 import { CreateInvoiceForms1737000000000 } from './migrations/1737000000000-create-invoice-forms.js';
 import { InvoiceForm } from '../invoice-forms/entities/invoice-form.entity.js';
 import { CreateInsuranceCompanies1710000000000 } from './migrations/1710000000000-create-insurance-companies.js';
@@ -38,6 +39,7 @@ export const databaseDataSource = new DataSource({
     AddOrganizationRole1736000000000,
     CreateInvoiceForms1737000000000,
     AddInvoiceTemplates1738000000000,
+    AssignTatishviliTemplate1738000000001,
   ],
   migrationsTableName: 'typeorm_migrations',
   synchronize: false,
