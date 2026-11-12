@@ -18,6 +18,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RegisterDto } from '../auth/dto/register.dto.js';
 import { InvoiceTemplatesDto } from './dto/invoice-templates.dto.js';
+import { SendForReviewDto } from '../invoice-forms/dto/send-for-review.dto.js';
 import { toFile } from '../invoice-forms/invoice-forms.controller.js';
 import {
   InvoiceFormsService,
@@ -103,6 +104,34 @@ export class AdminController {
     @Param('formId', ParseUUIDPipe) formId: string,
   ) {
     return toFile(await this.formsService.findFile(id, formId));
+  }
+
+  @Post('organizations/:id/forms/:formId/start')
+  @HttpCode(HttpStatus.OK)
+  startForm(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('formId', ParseUUIDPipe) formId: string,
+  ) {
+    return this.formsService.start(id, formId);
+  }
+
+  @Post('organizations/:id/forms/:formId/send-for-review')
+  @HttpCode(HttpStatus.OK)
+  sendFormForReview(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('formId', ParseUUIDPipe) formId: string,
+    @Body() dto: SendForReviewDto,
+  ) {
+    return this.formsService.sendForReview(id, formId, dto.templateKey);
+  }
+
+  @Post('organizations/:id/forms/:formId/publish')
+  @HttpCode(HttpStatus.OK)
+  publishForm(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('formId', ParseUUIDPipe) formId: string,
+  ) {
+    return this.formsService.publish(id, formId);
   }
 
   @Delete('forms/:formId')

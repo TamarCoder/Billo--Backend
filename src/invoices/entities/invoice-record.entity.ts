@@ -22,6 +22,7 @@ export interface InvoiceDraft {
   bankAccount: string;
   bankName: string;
   bankCode: string;
+  templateKey?: string;
 }
 
 @Entity('invoice_records')

@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import type { Repository } from 'typeorm';
 import type { InvoiceForm } from './entities/invoice-form.entity.js';
 import {
@@ -6,8 +10,55 @@ import {
   type UploadedForm,
 } from './invoice-forms.service.js';
 
-function makeRepo() {
+type Status = InvoiceForm['status'];
+
+// A tiny in-memory table: update() only applies when id, organizationId and status match.
+function makeManager(rows: Partial<InvoiceForm>[]) {
+  const orgUpdate = {
+    update: vi.fn(() => orgUpdate),
+    set: vi.fn(() => orgUpdate),
+    where: vi.fn(() => orgUpdate),
+    andWhere: vi.fn(() => orgUpdate),
+    setParameter: vi.fn(() => orgUpdate),
+    execute: vi.fn().mockResolvedValue({ affected: 1 }),
+  };
+  const manager = {
+    orgUpdate,
+    update: vi.fn(
+      (
+        _entity: unknown,
+        where: { id: string; organizationId: string; status: { value: Status[] } },
+        changes: Partial<InvoiceForm>,
+      ) => {
+        const row = rows.find(
+          (r) =>
+            r.id === where.id &&
+            r.organizationId === where.organizationId &&
+            where.status.value.includes(r.status as Status),
+        );
+        if (row) Object.assign(row, changes);
+        return Promise.resolve({ affected: row ? 1 : 0 });
+      },
+    ),
+    findOne: vi.fn(
+      (_entity: unknown, opts: { where: { id: string; organizationId: string } }) =>
+        Promise.resolve(
+          rows.find(
+            (r) =>
+              r.id === opts.where.id &&
+              r.organizationId === opts.where.organizationId,
+          ) ?? null,
+        ),
+    ),
+    createQueryBuilder: vi.fn(() => orgUpdate),
+    transaction: vi.fn((work: (m: unknown) => unknown) => work(manager)),
+  };
+  return manager;
+}
+
+function makeRepo(rows: Partial<InvoiceForm>[] = []) {
   return {
+    manager: makeManager(rows),
     find: vi.fn().mockResolvedValue([]),
     findOne: vi.fn(),
     create: vi.fn((value: Partial<InvoiceForm>) => value),
@@ -92,5 +143,118 @@ describe('InvoiceFormsService', () => {
   it('reports a missing form on delete', async () => {
     repo.delete.mockResolvedValue({ affected: 0 });
     await expect(service.remove('nope')).rejects.toThrow(NotFoundException);
+  });
+
+  describe('review workflow', () => {
+    const ALL: Status[] = [
+      'submitted',
+      'in_progress',
+      'review',
+      'approved',
+      'changes_requested',
+      'live',
+    ];
+    let row: Partial<InvoiceForm>;
+
+    const setup = (status: Status) => {
+      row = {
+        id: 'form-1',
+        organizationId: 'org-1',
+        status,
+        templateKey: status === 'approved' ? 'tatishvili' : null,
+        reviewComment: 'old',
+        reviewedAt: null,
+        publishedAt: null,
+      };
+      repo = makeRepo([row]);
+      service = new InvoiceFormsService(
+        repo as unknown as Repository<InvoiceForm>,
+      );
+    };
+
+    const actions: {
+      name: string;
+      from: Status[];
+      to: Status;
+      run: (s: InvoiceFormsService, org?: string) => Promise<InvoiceForm>;
+    }[] = [
+      { name: 'approve', from: ['review'], to: 'approved', run: (s, o = 'org-1') => s.approve(o, 'form-1') },
+      {
+        name: 'requestChanges',
+        from: ['review'],
+        to: 'changes_requested',
+        run: (s, o = 'org-1') => s.requestChanges(o, 'form-1', 'fix the logo'),
+      },
+      { name: 'start', from: ['submitted', 'changes_requested'], to: 'in_progress', run: (s, o = 'org-1') => s.start(o, 'form-1') },
+      {
+        name: 'sendForReview',
+        from: ['in_progress'],
+        to: 'review',
+        run: (s, o = 'org-1') => s.sendForReview(o, 'form-1', 'tatishvili'),
+      },
+      { name: 'publish', from: ['approved'], to: 'live', run: (s, o = 'org-1') => s.publish(o, 'form-1') },
+    ];
+
+    for (const action of actions) {
+      for (const status of ALL) {
+        const allowed = action.from.includes(status);
+        it(`${action.name}: ${status} -> ${allowed ? action.to : '409'}`, async () => {
+          setup(status);
+          if (allowed) {
+            const form = await action.run(service);
+            expect(form.status).toBe(action.to);
+          } else {
+            await expect(action.run(service)).rejects.toThrow(ConflictException);
+            expect(row.status).toBe(status);
+          }
+        });
+      }
+
+      it(`${action.name}: another organization gets 404 and nothing changes`, async () => {
+        const status = action.from[0];
+        setup(status);
+        await expect(action.run(service, 'org-2')).rejects.toThrow(NotFoundException);
+        expect(row.status).toBe(status);
+        expect(repo.manager.orgUpdate.execute).not.toHaveBeenCalled();
+      });
+    }
+
+    it('approve sets reviewedAt and clears the comment', async () => {
+      setup('review');
+      const form = await service.approve('org-1', 'form-1');
+      expect(form.reviewedAt).toBeInstanceOf(Date);
+      expect(form.reviewComment).toBeNull();
+    });
+
+    it('requestChanges stores the comment and reviewedAt', async () => {
+      setup('review');
+      const form = await service.requestChanges('org-1', 'form-1', 'fix the logo');
+      expect(form.reviewComment).toBe('fix the logo');
+      expect(form.reviewedAt).toBeInstanceOf(Date);
+    });
+
+    it('sendForReview stores the template key', async () => {
+      setup('in_progress');
+      const form = await service.sendForReview('org-1', 'form-1', 'tatishvili');
+      expect(form.templateKey).toBe('tatishvili');
+    });
+
+    it('publish sets publishedAt and adds the key to the organization once', async () => {
+      setup('approved');
+      const form = await service.publish('org-1', 'form-1');
+      expect(form.publishedAt).toBeInstanceOf(Date);
+      const q = repo.manager.orgUpdate;
+      expect(repo.manager.transaction).toHaveBeenCalled();
+      expect(q.where).toHaveBeenCalledWith('id = :organizationId', { organizationId: 'org-1' });
+      expect(q.andWhere).toHaveBeenCalledWith('NOT (:templateKey = ANY("invoice_templates"))');
+      expect(q.setParameter).toHaveBeenCalledWith('templateKey', 'tatishvili');
+      expect(q.execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('publish does not touch the organization when the status is wrong', async () => {
+      setup('review');
+      await expect(service.publish('org-1', 'form-1')).rejects.toThrow(ConflictException);
+      expect(repo.manager.orgUpdate.execute).not.toHaveBeenCalled();
+    });
   });
 });

@@ -2,6 +2,7 @@ import { Transform } from 'class-transformer';
 import {
   IsDateString,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Matches,
   MaxLength,
@@ -89,4 +90,10 @@ export class InvoiceDraftDto {
   @IsNotEmpty()
   @MaxLength(100)
   bankCode!: string;
+
+  // Which coded invoice template renders this invoice. Absent = standard template.
+  @IsOptional()
+  @IsString()
+  @Matches(/^[a-z0-9-]{1,50}$/u, { message: 'template key must be lowercase letters, digits or dashes' })
+  templateKey?: string;
 }
