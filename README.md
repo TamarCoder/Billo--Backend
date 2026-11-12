@@ -9,8 +9,13 @@ This repository is the API. The web and desktop app is here:
 
 ## The problem
 
-<!-- TODO: write your own story here, in 3–5 sentences.
-     What did you do by hand before? What went wrong? Why did you build Billo? -->
+I built Billo because writing monthly invoices by hand took a lot of time.
+The same data had to be typed again every time, and the risk of mistakes
+was high.
+
+Billo keeps issuers, client companies and invoice templates in one place.
+A new invoice takes a few seconds, and the history is grouped by month.
+The app runs in the browser and as a desktop app for macOS and Windows.
 
 ## Features
 
