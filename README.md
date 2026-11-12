@@ -1,171 +1,68 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Billo — Backend (REST API)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Billo is an app for creating and tracking invoices. A company keeps its
+issuers, client companies and invoice templates in one place, and creates
+monthly invoices in a few clicks.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This repository is the API. The web and desktop app is here:
+[TamarCoder/Billo](https://github.com/TamarCoder/Billo).
 
-## Description
+## The problem
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+<!-- TODO: write your own story here, in 3–5 sentences.
+     What did you do by hand before? What went wrong? Why did you build Billo? -->
 
-## Project setup
+## Features
 
-```bash
-$ npm install
+- Organization accounts with session login and a login rate limit
+- Admin area with its own guard
+- Issuers, companies, invoice forms (templates) and invoices
+- Monthly invoice history
+- Health check endpoint for deployments
+
+## Tech stack
+
+- **NestJS** + **TypeScript**
+- **PostgreSQL** with **TypeORM** and migrations
+- **Vitest** for tests
+- **Docker** / **docker-compose** for local runs
+- **Kubernetes** manifests (`k8s/`) with an AWS EKS overlay
+
+## Project structure
+
+```
+src/
+  auth/           login, sessions, guards, decorators
+  admin/          admin endpoints and admin guard
+  organizations/  organization accounts
+  issuers/        who issues the invoice
+  companies/      who receives the invoice
+  invoice-forms/  invoice templates
+  invoices/       invoices
+  settings/       organization settings
+  health/         health check
+  database/       data source, migrations, seed scripts
+k8s/              Kubernetes base + local and EKS overlays
 ```
 
-## Billo API (local development)
-
-The local PostgreSQL database and API run with Docker Compose. Copy `.env.example`
-to `.env`, set a local database password, then start the services:
+## Run locally
 
 ```bash
-docker compose up --build -d
+cp .env.example .env      # then fill in the values
+docker compose up -d      # starts PostgreSQL
+npm ci
+npm run migration:run
+npm run start:dev
 ```
 
-The API applies pending TypeORM migrations before starting. The PostgreSQL
-container is available on `127.0.0.1:5433`; the API is available on
-`http://127.0.0.1:4000`.
+The API runs on `http://localhost:4000` by default.
 
-The app's data is stored in PostgreSQL. The API endpoints are:
-
-| Method   | Path                       | Purpose                                                         |
-| -------- | -------------------------- | --------------------------------------------------------------- |
-| `GET`    | `/api/companies`           | List companies                                                  |
-| `POST`   | `/api/companies`           | Create a company with `{ "name": "..." }`                       |
-| `PUT`    | `/api/companies/:id`       | Update a company name                                           |
-| `DELETE` | `/api/companies/:id`       | Delete a company                                                |
-| `GET`    | `/api/invoices`            | List invoice history                                            |
-| `POST`   | `/api/invoices`            | Create or replace the invoice for a company and reporting month |
-| `PUT`    | `/api/invoices/:id`        | Update an invoice                                               |
-| `PATCH`  | `/api/invoices/:id/status` | Update an invoice status                                        |
-| `DELETE` | `/api/invoices/:id`        | Delete an invoice                                               |
-| `GET`    | `/api/settings`            | Read organization settings                                      |
-| `PUT`    | `/api/settings`            | Save organization settings                                      |
-
-When the frontend first connects from a browser or the desktop app, it imports
-existing local companies, invoices, and settings once per app origin. Local
-storage is kept intact; after a successful import, the PostgreSQL data is the
-source of truth. The import is transactional and can be safely retried if the
-request fails.
-
-This development API does not yet authenticate users. Do not expose it to the
-public internet or use it with production data until authentication and
-authorization are implemented.
-
-## Compile and run the project
+## Tests
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm test
 ```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Observability
-
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
-
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-To add it to this project, run this and approve the code it prints at [observe.nestjs.com/link](https://observe.nestjs.com/link) - signing up for free if you have no account:
-
-```bash
-$ npx @nestjs/observe link
-```
-
-It installs `@nestjs/observe`, wires it into `AppModule` and `main.ts`, and writes the app key and secret into `.env`, which every `nest start` script (`start`, `start:dev`, `start:debug`) then loads. In production, set `OBSERVE_APP_KEY` and `OBSERVE_APP_SECRET` in the environment instead.
-
-Or do it by hand:
-
-```bash
-$ npm install @nestjs/observe
-```
-
-Then follow the [setup guide](https://docs.nestjs.com/observability/sdk) - it takes a single import and an app key.
-
-The free plan needs no payment details and covers 300,000 events a month. You can also browse the [live demo](https://www.observe-demo.nestjs.com/dashboard) first - the whole dashboard over a busy service's data, with nothing to install.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observe](https://observe.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+[MIT](LICENSE)
